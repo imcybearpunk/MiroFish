@@ -103,7 +103,7 @@ def create_app(config_class=Config):
         if request.path == '/health' or request.method == 'OPTIONS':
             return None
         if _api_key:
-            provided = request.headers.get('X-API-Key') or request.args.get('api_key')
+            provided = request.headers.get('X-API-Key')  # query param removed: logged in server logs (OWASP)
             if provided != _api_key:
                 from flask import jsonify as _jsonify
                 return _jsonify({'error': 'Unauthorized', 'message': 'Invalid or missing API key'}), 401
@@ -158,7 +158,12 @@ def create_app(config_class=Config):
 
         @app.route('/metrics')
         def metrics():
-            from flask import Response
+            from flask import Response, jsonify as _jsonify
+            # Protect metrics with API key when auth is enabled
+            if _api_key:
+                provided = request.headers.get('X-API-Key')
+                if provided != _api_key:
+                    return _jsonify({'error': 'Unauthorized', 'message': 'X-API-Key required for /metrics'}), 401
             return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
         logger.info("Prometheus /metrics habilitado / Prometheus /metrics enabled")
