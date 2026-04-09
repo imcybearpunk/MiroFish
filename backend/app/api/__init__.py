@@ -12,6 +12,12 @@ from . import graph_project  # noqa: E402, F401
 from . import graph_ontology  # noqa: E402, F401
 from . import graph_build  # noqa: E402, F401
 from . import graph_query  # noqa: E402, F401
-from . import simulation  # noqa: E402, F401
+from . import simulation_helpers  # noqa: E402, F401
+from . import simulation_entities  # noqa: E402, F401
+from . import simulation_setup  # noqa: E402, F401
+from . import simulation_run  # noqa: E402, F401
+from . import simulation_status  # noqa: E402, F401
+from . import simulation_data  # noqa: E402, F401
+from . import simulation_interview  # noqa: E402, F401
 from . import report  # noqa: E402, F401
 
