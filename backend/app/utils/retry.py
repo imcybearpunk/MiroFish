@@ -20,10 +20,10 @@ def retry_with_backoff(
     jitter: bool = True,
     exceptions: Tuple[Type[Exception], ...] = (Exception,),
     on_retry: Optional[Callable[[Exception, int], None]] = None
-):
+) -> Callable:
     """
     带指数退避的重试装饰器
-    
+
     Args:
         max_retries: 最大重试次数
         initial_delay: 初始延迟（秒）
@@ -32,7 +32,7 @@ def retry_with_backoff(
         jitter: 是否添加随机抖动
         exceptions: 需要重试的异常类型
         on_retry: 重试时的回调函数 (exception, retry_count)
-    
+
     Usage:
         @retry_with_backoff(max_retries=3)
         def call_llm_api():
@@ -85,12 +85,12 @@ def retry_with_backoff_async(
     jitter: bool = True,
     exceptions: Tuple[Type[Exception], ...] = (Exception,),
     on_retry: Optional[Callable[[Exception, int], None]] = None
-):
+) -> Callable:
     """
     异步版本的重试装饰器
     """
     import asyncio
-    
+
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         async def wrapper(*args, **kwargs) -> Any:
@@ -140,7 +140,7 @@ class RetryableAPIClient:
         initial_delay: float = 1.0,
         max_delay: float = 30.0,
         backoff_factor: float = 2.0
-    ):
+    ) -> None:
         self.max_retries = max_retries
         self.initial_delay = initial_delay
         self.max_delay = max_delay

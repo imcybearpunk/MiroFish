@@ -129,10 +129,10 @@ class SimulationManager:
         '../../uploads/simulations'
     )
     
-    def __init__(self):
+    def __init__(self) -> None:
         # 确保目录存在
         os.makedirs(self.SIMULATION_DATA_DIR, exist_ok=True)
-        
+
         # 内存中的模拟状态缓存
         self._simulations: Dict[str, SimulationState] = {}
     
@@ -142,32 +142,32 @@ class SimulationManager:
         os.makedirs(sim_dir, exist_ok=True)
         return sim_dir
     
-    def _save_simulation_state(self, state: SimulationState):
+    def _save_simulation_state(self, state: SimulationState) -> None:
         """保存模拟状态到文件"""
         sim_dir = self._get_simulation_dir(state.simulation_id)
         state_file = os.path.join(sim_dir, "state.json")
-        
+
         state.updated_at = datetime.now().isoformat()
-        
+
         with open(state_file, 'w', encoding='utf-8') as f:
             json.dump(state.to_dict(), f, ensure_ascii=False, indent=2)
-        
+
         self._simulations[state.simulation_id] = state
     
     def _load_simulation_state(self, simulation_id: str) -> Optional[SimulationState]:
         """从文件加载模拟状态"""
         if simulation_id in self._simulations:
             return self._simulations[simulation_id]
-        
+
         sim_dir = self._get_simulation_dir(simulation_id)
         state_file = os.path.join(sim_dir, "state.json")
-        
+
         if not os.path.exists(state_file):
             return None
-        
+
         with open(state_file, 'r', encoding='utf-8') as f:
             data = json.load(f)
-        
+
         state = SimulationState(
             simulation_id=simulation_id,
             project_id=data.get("project_id", ""),
@@ -187,7 +187,7 @@ class SimulationManager:
             updated_at=data.get("updated_at", datetime.now().isoformat()),
             error=data.get("error"),
         )
-        
+
         self._simulations[simulation_id] = state
         return state
     
@@ -463,19 +463,19 @@ class SimulationManager:
     def list_simulations(self, project_id: Optional[str] = None) -> List[SimulationState]:
         """列出所有模拟"""
         simulations = []
-        
+
         if os.path.exists(self.SIMULATION_DATA_DIR):
             for sim_id in os.listdir(self.SIMULATION_DATA_DIR):
                 # 跳过隐藏文件（如 .DS_Store）和非目录文件
                 sim_path = os.path.join(self.SIMULATION_DATA_DIR, sim_id)
                 if sim_id.startswith('.') or not os.path.isdir(sim_path):
                     continue
-                
+
                 state = self._load_simulation_state(sim_id)
                 if state:
                     if project_id is None or state.project_id == project_id:
                         simulations.append(state)
-        
+
         return simulations
     
     def get_profiles(self, simulation_id: str, platform: str = "reddit") -> List[Dict[str, Any]]:
@@ -483,13 +483,13 @@ class SimulationManager:
         state = self._load_simulation_state(simulation_id)
         if not state:
             raise ValueError(f"模拟不存在: {simulation_id}")
-        
+
         sim_dir = self._get_simulation_dir(simulation_id)
         profile_path = os.path.join(sim_dir, f"{platform}_profiles.json")
-        
+
         if not os.path.exists(profile_path):
             return []
-        
+
         with open(profile_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     
@@ -497,10 +497,10 @@ class SimulationManager:
         """获取模拟配置"""
         sim_dir = self._get_simulation_dir(simulation_id)
         config_path = os.path.join(sim_dir, "simulation_config.json")
-        
+
         if not os.path.exists(config_path):
             return None
-        
+
         with open(config_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     
@@ -509,7 +509,7 @@ class SimulationManager:
         sim_dir = self._get_simulation_dir(simulation_id)
         config_path = os.path.join(sim_dir, "simulation_config.json")
         scripts_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../scripts'))
-        
+
         return {
             "simulation_dir": sim_dir,
             "scripts_dir": scripts_dir,

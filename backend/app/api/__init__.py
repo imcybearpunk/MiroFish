@@ -8,7 +8,10 @@ graph_bp = Blueprint('graph', __name__)
 simulation_bp = Blueprint('simulation', __name__)
 report_bp = Blueprint('report', __name__)
 
-from . import graph  # noqa: E402, F401
+from . import graph_project  # noqa: E402, F401
+from . import graph_ontology  # noqa: E402, F401
+from . import graph_build  # noqa: E402, F401
+from . import graph_query  # noqa: E402, F401
 from . import simulation  # noqa: E402, F401
 from . import report  # noqa: E402, F401
 

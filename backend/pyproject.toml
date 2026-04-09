@@ -32,6 +32,16 @@ dependencies = [
     # 工具库
     "python-dotenv>=1.0.0",
     "pydantic>=2.0.0",
+
+    # 监控与限流 / Monitoring & Rate Limiting
+    "sentry-sdk[flask]>=2.0.0",
+    "flask-limiter>=3.5.0",
+    # Dependencia explícita de flask-limiter / Explicit flask-limiter dependency
+    "limits>=3.0.0",
+    # Métricas / Metrics
+    "prometheus-client>=0.20.0",
+    # Validación de archivos / File magic byte validation
+    "python-magic>=0.4.27",
 ]
 
 [project.optional-dependencies]
@@ -39,6 +49,9 @@ dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
     "pipreqs>=0.5.0",
+    "black>=24.0.0",
+    "mypy>=1.0.0",
+    "pre-commit>=3.6.0",
 ]
 
 [build-system]
@@ -53,3 +66,18 @@ dev = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+no_strict_optional = true
+exclude = ["tests/"]
+
+[tool.flake8]
+max-line-length = 100
+extend-ignore = ["E203", "W503", "E501"]
+exclude = [".git", "__pycache__", "*.egg-info"]

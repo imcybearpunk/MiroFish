@@ -61,7 +61,7 @@ class TextProcessor:
         return text.strip()
     
     @staticmethod
-    def get_text_stats(text: str) -> dict:
+    def get_text_stats(text: str) -> dict[str, int]:
         """获取文本统计信息"""
         return {
             "total_chars": len(text),
