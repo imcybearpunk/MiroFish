@@ -131,6 +131,18 @@ def create_app(config_class=Config):
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['X-XSS-Protection'] = '1; mode=block'
         response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        # Content-Security-Policy: restrict sources to self + inline styles for Swagger UI
+        csp_directives = [
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline'",   # unsafe-inline required by Swagger UI
+            "style-src 'self' 'unsafe-inline'",     # unsafe-inline required by Swagger UI
+            "img-src 'self' data:",                 # data: for Swagger logo
+            "connect-src 'self'",
+            "font-src 'self'",
+            "object-src 'none'",
+            "frame-ancestors 'none'",
+        ]
+        response.headers['Content-Security-Policy'] = '; '.join(csp_directives)
         # Only add HSTS in production
         if not debug_mode:
             response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
