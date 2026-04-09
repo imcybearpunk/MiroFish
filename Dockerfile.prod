@@ -1,0 +1,91 @@
+# =============================================================================
+# Stage 1: Build frontend
+# =============================================================================
+FROM node:20-slim AS frontend-builder
+
+WORKDIR /app
+
+# Install root-level node deps (if any)
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev 2>/dev/null || npm ci
+
+# Install and build frontend
+COPY frontend/package.json frontend/package-lock.json ./frontend/
+RUN npm ci --prefix frontend
+
+COPY frontend/ ./frontend/
+COPY locales/ ./locales/
+RUN npm run build --prefix frontend
+
+# =============================================================================
+# Stage 2: Build Python dependencies
+# =============================================================================
+FROM python:3.11-slim AS python-builder
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:0.9.26 /uv /uvx /bin/
+
+# Install libmagic for python-magic
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libmagic1 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app/backend
+
+COPY backend/pyproject.toml backend/uv.lock ./
+
+# Install only production deps (no dev extras)
+RUN uv sync --frozen --no-dev
+
+# =============================================================================
+# Stage 3: Production runtime
+# =============================================================================
+FROM python:3.11-slim AS production
+
+# Security: run as non-root user
+RUN groupadd -r mirofish && useradd -r -g mirofish -d /app -s /bin/bash mirofish
+
+# Runtime system deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libmagic1 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy Python venv from builder
+COPY --from=python-builder /app/backend/.venv /app/backend/.venv
+
+# Copy application code
+COPY --chown=mirofish:mirofish backend/ ./backend/
+COPY --chown=mirofish:mirofish static/ ./static/
+COPY --chown=mirofish:mirofish locales/ ./locales/
+
+# Copy built frontend assets
+COPY --from=frontend-builder --chown=mirofish:mirofish /app/frontend/dist ./frontend/dist
+
+# Create uploads directory
+RUN mkdir -p /app/backend/uploads && chown mirofish:mirofish /app/backend/uploads
+
+USER mirofish
+
+# Activate venv
+ENV PATH="/app/backend/.venv/bin:$PATH"
+ENV PYTHONPATH="/app/backend"
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+EXPOSE 5001
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:5001/health || exit 1
+
+CMD ["python", "-m", "gunicorn", \
+     "--bind", "0.0.0.0:5001", \
+     "--workers", "4", \
+     "--worker-class", "gthread", \
+     "--threads", "2", \
+     "--timeout", "120", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-", \
+     "backend.app:create_app()"]

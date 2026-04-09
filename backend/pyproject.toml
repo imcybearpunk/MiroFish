@@ -42,6 +42,9 @@ dependencies = [
     "prometheus-client>=0.20.0",
     # Validación de archivos / File magic byte validation
     "python-magic>=0.4.27",
+
+    # Production server
+    "gunicorn>=21.0.0",
 ]
 
 [project.optional-dependencies]
