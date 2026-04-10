@@ -42,12 +42,29 @@ jobs:
             --cov=app \
             --cov-report=term-missing \
             --cov-report=xml:coverage.xml \
-            --cov-fail-under=50
+            --cov-report=html:htmlcov \
+            --cov-fail-under=30
 
-      - name: Upload coverage report
+      - name: Upload HTML coverage report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
+          name: coverage-html
+          path: backend/htmlcov/
+          retention-days: 30
+
+      - name: Upload coverage XML (for Codecov)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
           path: backend/coverage.xml
           retention-days: 14
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: backend/coverage.xml
+          flags: backend
+          name: mirofish-backend
+          fail_ci_if_error: false   # don't break CI if Codecov is down

@@ -10,6 +10,8 @@
 
 <a href="https://www.shanda.com/" target="_blank"><img src="./static/image/shanda_logo.png" alt="666ghj%2MiroFish | Shanda" height="40"/></a>
 
+[![CI](https://github.com/imcybearpunk/MiroFish/actions/workflows/ci.yml/badge.svg)](https://github.com/imcybearpunk/MiroFish/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/imcybearpunk/MiroFish/branch/main/graph/badge.svg)](https://codecov.io/gh/imcybearpunk/MiroFish)
 [![GitHub Stars](https://img.shields.io/github/stars/666ghj/MiroFish?style=flat-square&color=DAA520)](https://github.com/666ghj/MiroFish/stargazers)
 [![GitHub Watchers](https://img.shields.io/github/watchers/666ghj/MiroFish?style=flat-square)](https://github.com/666ghj/MiroFish/watchers)
 [![GitHub Forks](https://img.shields.io/github/forks/666ghj/MiroFish?style=flat-square)](https://github.com/666ghj/MiroFish/network)
