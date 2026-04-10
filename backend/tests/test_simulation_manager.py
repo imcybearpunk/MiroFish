@@ -315,6 +315,9 @@ class TestSimulationManagerRetrieval:
         with open(state_file, "w") as f:
             json.dump(state_data, f)
 
+        # Evict from in-memory cache so get_simulation re-reads from disk
+        sim_manager._simulations.pop(created.simulation_id, None)
+
         retrieved = sim_manager.get_simulation(created.simulation_id)
 
         assert retrieved.entities_count == 42
@@ -434,7 +437,8 @@ class TestSimulationManagerProfiles:
         ]
 
         sim_dir = Path(sim_manager.SIMULATION_DATA_DIR) / sim.simulation_id
-        profiles_file = sim_dir / "profiles.json"
+        # Implementation reads {platform}_profiles.json (default platform="reddit")
+        profiles_file = sim_dir / "reddit_profiles.json"
 
         with open(profiles_file, "w") as f:
             json.dump(profiles_data, f)
@@ -452,17 +456,16 @@ class TestSimulationManagerProfiles:
             graph_id="graph_001",
         )
 
-        # Create a profiles file with mixed platforms
-        profiles_data = [
-            {"id": "user_1", "platform": "reddit", "name": "RedditUser"},
-            {"id": "user_2", "platform": "twitter", "name": "TwitterUser"},
-        ]
-
+        # Implementation uses separate files per platform
         sim_dir = Path(sim_manager.SIMULATION_DATA_DIR) / sim.simulation_id
-        profiles_file = sim_dir / "profiles.json"
 
-        with open(profiles_file, "w") as f:
-            json.dump(profiles_data, f)
+        reddit_profiles = [{"id": "user_1", "platform": "reddit", "name": "RedditUser"}]
+        twitter_profiles = [{"id": "user_2", "platform": "twitter", "name": "TwitterUser"}]
+
+        with open(sim_dir / "reddit_profiles.json", "w") as f:
+            json.dump(reddit_profiles, f)
+        with open(sim_dir / "twitter_profiles.json", "w") as f:
+            json.dump(twitter_profiles, f)
 
         # Get reddit profiles
         result = sim_manager.get_profiles(sim.simulation_id, platform="reddit")
@@ -500,7 +503,8 @@ class TestSimulationManagerConfig:
         }
 
         sim_dir = Path(sim_manager.SIMULATION_DATA_DIR) / sim.simulation_id
-        config_file = sim_dir / "config.json"
+        # Implementation reads "simulation_config.json", not "config.json"
+        config_file = sim_dir / "simulation_config.json"
 
         with open(config_file, "w") as f:
             json.dump(config_data, f)
@@ -540,11 +544,14 @@ class TestSimulationManagerRunInstructions:
 
         sim_dir = Path(sim_manager.SIMULATION_DATA_DIR) / sim.simulation_id
         assert result["simulation_dir"] == str(sim_dir)
-        assert result["scripts_dir"] == str(sim_dir / "scripts")
-        assert result["config_file"] == str(sim_dir / "config.json")
+        # scripts_dir points to the repo's scripts/ folder (absolute), not sim_dir/scripts
+        assert os.path.isabs(result["scripts_dir"])
+        assert result["scripts_dir"].endswith("scripts")
+        # config_file points to simulation_config.json inside the sim dir
+        assert result["config_file"] == str(sim_dir / "simulation_config.json")
 
-    def test_get_run_instructions_commands_is_list(self, sim_manager):
-        """Verify get_run_instructions returns commands as a list."""
+    def test_get_run_instructions_commands_is_dict(self, sim_manager):
+        """Verify get_run_instructions returns commands as a dict (keyed by platform)."""
         sim = sim_manager.create_simulation(
             project_id="proj_001",
             graph_id="graph_001",
@@ -552,7 +559,9 @@ class TestSimulationManagerRunInstructions:
 
         result = sim_manager.get_run_instructions(sim.simulation_id)
 
-        assert isinstance(result["commands"], list)
+        assert isinstance(result["commands"], dict)
+        assert "twitter" in result["commands"]
+        assert "reddit" in result["commands"]
 
     def test_get_run_instructions_instructions_is_string(self, sim_manager):
         """Verify get_run_instructions returns instructions as a string."""

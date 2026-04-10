@@ -183,7 +183,12 @@ def split_text_into_chunks(
             chunks.append(chunk)
         
         # 下一个块从重叠位置开始
-        start = end - overlap if end < len(text) else len(text)
+        # Guard: if overlap >= effective step, force forward progress to avoid infinite loop
+        if end < len(text):
+            next_start = end - overlap
+            start = next_start if next_start > start else end
+        else:
+            start = len(text)
     
     return chunks
 

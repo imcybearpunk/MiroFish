@@ -131,17 +131,18 @@ class TestAPIKeyAuthentication:
         # OPTIONS should bypass auth, not return 401
         assert response.status_code != 401
 
-    def test_api_key_in_query_parameter(self, app_with_auth):
+    def test_api_key_in_query_parameter_is_rejected(self, app_with_auth):
         """
-        Test that API key can be provided via query parameter.
+        Test that API key in query parameter is NOT accepted (OWASP A02).
 
-        The authentication middleware should accept api_key in query params
-        as an alternative to the X-API-Key header.
+        Query parameters appear in server logs, browser history, and Referer
+        headers — they must never carry secrets. The only accepted location
+        is the X-API-Key request header.
         """
         client = app_with_auth.test_client()
         response = client.get('/api/graph/project/list?api_key=test-api-key-secret')
-        # Should not be 401 Unauthorized
-        assert response.status_code != 401
+        # Must return 401: query-param key must be ignored
+        assert response.status_code == 401
 
     def test_invalid_api_key_returns_401(self, app_with_auth):
         """

@@ -25,6 +25,17 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
+    # Resolve SECRET_KEY here (not at import time) so pytest fixtures can
+    # patch os.environ before create_app is called.
+    app.config['SECRET_KEY'] = config_class._get_secret_key()
+
+    # Re-read env-sensitive values so pytest patch.dict fixtures take effect.
+    # Config class attributes are evaluated at import time; re-reading from
+    # os.environ here lets tests inject values via conftest patch.dict().
+    import os as _os
+    app.config['LLM_API_KEY'] = _os.environ.get('LLM_API_KEY', app.config.get('LLM_API_KEY'))
+    app.config['ZEP_API_KEY'] = _os.environ.get('ZEP_API_KEY', app.config.get('ZEP_API_KEY'))
+
     # 设置JSON编码：确保中文直接显示（而不是 \uXXXX 格式）
     # Flask >= 2.3 使用 app.json.ensure_ascii，旧版本使用 JSON_AS_ASCII 配置
     if hasattr(app, 'json') and hasattr(app.json, 'ensure_ascii'):
@@ -76,6 +87,7 @@ def create_app(config_class=Config):
         key_func=get_remote_address,
         default_limits=["200 per hour", "50 per minute"],
         storage_uri="memory://",
+        headers_enabled=True,   # Emit X-RateLimit-* headers (disabled by default in v4)
     )
     logger.info("速率限制已启用 / Rate limiting enabled")
 

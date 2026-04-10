@@ -106,13 +106,17 @@ class Config:
                 "SECRET_KEY 使用了默认硬编码值！必须在 .env 中设置唯一的密钥。"
             )
 
-        if not cls.LLM_API_KEY:
+        # Read from os.environ at call time (not class attr) so test fixtures work
+        llm_key = os.environ.get('LLM_API_KEY') or cls.LLM_API_KEY
+        zep_key = os.environ.get('ZEP_API_KEY') or cls.ZEP_API_KEY
+        if not llm_key:
             errors.append("LLM_API_KEY 未配置")
-        if not cls.ZEP_API_KEY:
+        if not zep_key:
             errors.append("ZEP_API_KEY 未配置")
         return errors
 
 
-# 在配置类加载时初始化SECRET_KEY
-Config.SECRET_KEY = Config._get_secret_key()
+# NOTE: SECRET_KEY is resolved lazily inside create_app() to avoid
+# side-effects (ValueError) when config.py is imported at test-collection
+# time before environment variables are patched by pytest fixtures.
 

@@ -74,7 +74,7 @@ def test_allowed_extensions_set_correctly(app):
     File uploads should only accept specific extensions for security.
     Expected extensions are: pdf, md, txt, markdown.
     """
-    assert hasattr(app.config, 'ALLOWED_EXTENSIONS')
+    assert 'ALLOWED_EXTENSIONS' in app.config
     allowed = app.config['ALLOWED_EXTENSIONS']
     assert 'pdf' in allowed
     assert 'md' in allowed
@@ -87,9 +87,9 @@ def test_max_content_length_set(app):
     Test that MAX_CONTENT_LENGTH is configured for upload limits.
 
     File uploads should be limited to prevent resource exhaustion.
-    Default limit is 50MB.
+    Default limit is 25MB (configurable via MAX_UPLOAD_MB env var).
     """
-    assert app.config['MAX_CONTENT_LENGTH'] == 50 * 1024 * 1024
+    assert app.config['MAX_CONTENT_LENGTH'] == 25 * 1024 * 1024
 
 
 def test_json_as_ascii_false(app):
